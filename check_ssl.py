@@ -612,48 +612,82 @@ GRADE_COLOURS = {
 }
 
 
-def print_result(r: DomainResult):
-    gc = GRADE_COLOURS.get(r.grade, "")
-    print(f"\n{'═' * 72}")
-    print(f"  {BOLD}{r.domain}:{r.port}{RESET}   →   Grade: {gc}{BOLD}{r.grade}{RESET}")
-    print(f"{'═' * 72}")
+def format_result(r: DomainResult, use_colour: bool = True) -> str:
+    """Format a single domain result as a text block."""
+    lines = []
+
+    gc = GRADE_COLOURS.get(r.grade, "") if use_colour else ""
+    bold = BOLD if use_colour else ""
+    reset = RESET if use_colour else ""
+
+    lines.append(f"\n{'═' * 72}")
+    lines.append(f"  {bold}{r.domain}:{r.port}{reset}   →   Grade: {gc}{bold}{r.grade}{reset}")
+    lines.append(f"{'═' * 72}")
 
     if r.ip_address:
-        print(f"  IP Address       : {r.ip_address}")
+        lines.append(f"  IP Address       : {r.ip_address}")
     if r.error:
-        print(f"  Error            : {r.error}")
+        lines.append(f"  Error            : {r.error}")
     if not r.reachable:
-        print(f"  Status           : UNREACHABLE")
-        return
+        lines.append(f"  Status           : UNREACHABLE")
+        return "\n".join(lines)
 
-    print(f"  Subject CN       : {r.subject or '—'}")
-    print(f"  Issuer           : {r.issuer or '—'}")
-    print(f"  Valid From       : {r.not_before or '—'}")
-    print(f"  Valid Until      : {r.not_after or '—'}  ({r.days_until_expiry} days remaining)" if r.days_until_expiry is not None else "")
-    print(f"  Self-Signed      : {'Yes ⚠' if r.self_signed else 'No'}")
-    print(f"  Sig Algorithm    : {r.sig_algorithm or '—'}")
-    print(f"  Key              : {r.key_type or '?'} {r.key_bits or '?'} bits")
-    print(f"  Serial           : {r.serial or '—'}")
+    lines.append(f"  Subject CN       : {r.subject or '—'}")
+    lines.append(f"  Issuer           : {r.issuer or '—'}")
+    lines.append(f"  Valid From       : {r.not_before or '—'}")
+    if r.days_until_expiry is not None:
+        lines.append(f"  Valid Until      : {r.not_after or '—'}  ({r.days_until_expiry} days remaining)")
+    else:
+        lines.append(f"  Valid Until      : {r.not_after or '—'}")
+    lines.append(f"  Self-Signed      : {'Yes ⚠' if r.self_signed else 'No'}")
+    lines.append(f"  Sig Algorithm    : {r.sig_algorithm or '—'}")
+    lines.append(f"  Key              : {r.key_type or '?'} {r.key_bits or '?'} bits")
+    lines.append(f"  Serial           : {r.serial or '—'}")
 
-    print(f"\n  Negotiated       : {r.negotiated_protocol}  /  {r.negotiated_cipher} ({r.negotiated_bits} bits)")
-    print(f"  Protocols        : {', '.join(r.protocols_supported) if r.protocols_supported else '—'}")
+    lines.append(f"\n  Negotiated       : {r.negotiated_protocol}  /  {r.negotiated_cipher} ({r.negotiated_bits} bits)")
+    lines.append(f"  Protocols        : {', '.join(r.protocols_supported) if r.protocols_supported else '—'}")
     if r.ciphers_offered:
-        print(f"  Ciphers Seen     :")
+        lines.append(f"  Ciphers Seen     :")
         for c in r.ciphers_offered:
-            print(f"      {c}")
+            lines.append(f"      {c}")
 
-    print(f"  HSTS             : {'Yes — ' + (r.hsts or '') if r.hsts_present else 'No ⚠'}")
-    print(f"  OCSP Stapling    : {'Yes' if r.ocsp_stapling else 'No'}")
+    lines.append(f"  HSTS             : {'Yes — ' + (r.hsts or '') if r.hsts_present else 'No ⚠'}")
+    lines.append(f"  OCSP Stapling    : {'Yes' if r.ocsp_stapling else 'No'}")
 
     if r.findings:
-        print(f"\n  {'─' * 60}")
-        print(f"  FINDINGS ({len(r.findings)}):")
+        lines.append(f"\n  {'─' * 60}")
+        lines.append(f"  FINDINGS ({len(r.findings)}):")
         for f in sorted(r.findings, key=lambda x: ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"].index(x.severity)):
-            sc = SEVERITY_COLOURS.get(f.severity, "")
-            print(f"    {sc}[{f.severity}]{RESET} {f.title}")
-            print(f"           {f.detail}")
+            sc = SEVERITY_COLOURS.get(f.severity, "") if use_colour else ""
+            lines.append(f"    {sc}[{f.severity}]{reset} {f.title}")
+            lines.append(f"           {f.detail}")
     else:
-        print(f"\n  ✅  No issues found.")
+        lines.append(f"\n  ✅  No issues found.")
+
+    return "\n".join(lines)
+
+
+def format_summary(results: list[DomainResult], use_colour: bool = True) -> str:
+    """Format the summary table as a text block."""
+    reset = RESET if use_colour else ""
+    lines = []
+
+    lines.append(f"\n\n{'═' * 72}")
+    lines.append(f"  SUMMARY")
+    lines.append(f"{'═' * 72}")
+    lines.append(f"  {'Domain':<35} {'Grade':>6}  {'Findings':>8}  {'Critical':>8}  {'High':>6}")
+    lines.append(f"  {'─' * 35} {'─' * 6}  {'─' * 8}  {'─' * 8}  {'─' * 6}")
+    for r in results:
+        crits = sum(1 for f in r.findings if f.severity == "CRITICAL")
+        highs = sum(1 for f in r.findings if f.severity == "HIGH")
+        gc = GRADE_COLOURS.get(r.grade, "") if use_colour else ""
+        lines.append(f"  {r.domain:<35} {gc}{r.grade:>6}{reset}  {len(r.findings):>8}  {crits:>8}  {highs:>6}")
+
+    return "\n".join(lines)
+
+
+def print_result(r: DomainResult):
+    print(format_result(r, use_colour=True))
 
 
 def write_json_report(results: list[DomainResult], path: str):
@@ -819,24 +853,30 @@ def main():
     # Write reports
     json_path = f"{args.output}.json"
     csv_path = f"{args.output}.csv"
+    txt_path = f"{args.output}.txt"
     write_json_report(results, json_path)
     write_csv_report(results, csv_path)
 
-    # Summary
-    print(f"\n\n{'═' * 72}")
-    print(f"  SUMMARY")
-    print(f"{'═' * 72}")
-    print(f"  {'Domain':<35} {'Grade':>6}  {'Findings':>8}  {'Critical':>8}  {'High':>6}")
-    print(f"  {'─' * 35} {'─' * 6}  {'─' * 8}  {'─' * 8}  {'─' * 6}")
-    for r in results:
-        crits = sum(1 for f in r.findings if f.severity == "CRITICAL")
-        highs = sum(1 for f in r.findings if f.severity == "HIGH")
-        gc = GRADE_COLOURS.get(r.grade, "")
-        print(f"  {r.domain:<35} {gc}{r.grade:>6}{RESET}  {len(r.findings):>8}  {crits:>8}  {highs:>6}")
+    # Write plain-text report (domain tables + summary, no ANSI codes)
+    with open(txt_path, "w") as fp:
+        fp.write(f"{'▄' * 72}\n")
+        fp.write(f"  SSL/TLS Analyser Report\n")
+        fp.write(f"  Scanned {len(results)} domain(s)  |  {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC\n")
+        fp.write(f"{'▀' * 72}\n")
+        for r in results:
+            fp.write(format_result(r, use_colour=False))
+            fp.write("\n")
+        fp.write(format_summary(results, use_colour=False))
+        fp.write("\n")
+
+    # Summary (terminal, with colour)
+    summary_text = format_summary(results, use_colour=True)
+    print(summary_text)
 
     print(f"\n  Reports saved:")
     print(f"    → {json_path}")
     print(f"    → {csv_path}")
+    print(f"    → {txt_path}")
     print()
 
 

@@ -1,0 +1,81 @@
+
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+  SSL/TLS Analyser — scanning 2 domain(s)
+  Timeout: 8s  |  Workers: 5  |  Port: 443
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
+════════════════════════════════════════════════════════════════════════
+  [1mbip.nz:443[0m   →   Grade: [33m[1mC[0m
+════════════════════════════════════════════════════════════════════════
+  IP Address       : 13.73.116.45
+  Subject CN       : *.bip.nz
+  Issuer           : Sectigo Limited
+  Valid From       : Mar 24 00:00:00 2025 GMT
+  Valid Until      : Apr 23 23:59:59 2026 GMT  (31 days remaining)
+  Self-Signed      : No
+  Sig Algorithm    : sha256WithRSAEncryption
+  Key              : RSA 2048 bits
+  Serial           : —
+
+  Negotiated       : TLSv1.3  /  TLS_AES_256_GCM_SHA384 (256 bits)
+  Protocols        : TLSv1.0, TLSv1.1, TLSv1.2, TLSv1.3
+  Ciphers Seen     :
+      TLSv1.0: ECDHE-RSA-AES256-SHA
+      TLSv1.1: ECDHE-RSA-AES256-SHA
+      TLSv1.2: ECDHE-RSA-AES256-GCM-SHA384
+      TLSv1.3: TLS_AES_256_GCM_SHA384
+  HSTS             : No ⚠
+  OCSP Stapling    : No
+
+  ────────────────────────────────────────────────────────────
+  FINDINGS (4):
+    [93m[HIGH][0m TLSv1.0 Supported
+           Server supports deprecated TLSv1.0. Should be disabled (POODLE, BEAST, etc.).
+    [93m[HIGH][0m TLSv1.1 Supported
+           Server supports deprecated TLSv1.1. Should be disabled (POODLE, BEAST, etc.).
+    [33m[MEDIUM][0m No HSTS Header
+           Strict-Transport-Security header is missing. Enables SSL-stripping attacks.
+    [36m[LOW][0m No OCSP Stapling
+           OCSP stapling not detected. Enabling it improves privacy and performance.
+
+════════════════════════════════════════════════════════════════════════
+  [1mcolorcote.co.nz:443[0m   →   Grade: [93m[1mB[0m
+════════════════════════════════════════════════════════════════════════
+  IP Address       : 103.241.84.57
+  Subject CN       : colorcote.co.nz
+  Issuer           : Sectigo Limited
+  Valid From       : Jun 11 00:00:00 2025 GMT
+  Valid Until      : Jul 11 23:59:59 2026 GMT  (110 days remaining)
+  Self-Signed      : No
+  Sig Algorithm    : sha384WithRSAEncryption
+  Key              : RSA 2048 bits
+  Serial           : —
+
+  Negotiated       : TLSv1.3  /  TLS_AES_128_GCM_SHA256 (128 bits)
+  Protocols        : TLSv1.2, TLSv1.3
+  Ciphers Seen     :
+      TLSv1.2: ECDHE-RSA-AES128-GCM-SHA256
+      TLSv1.3: TLS_AES_128_GCM_SHA256
+  HSTS             : No ⚠
+  OCSP Stapling    : No
+
+  ────────────────────────────────────────────────────────────
+  FINDINGS (2):
+    [33m[MEDIUM][0m No HSTS Header
+           Strict-Transport-Security header is missing. Enables SSL-stripping attacks.
+    [36m[LOW][0m No OCSP Stapling
+           OCSP stapling not detected. Enabling it improves privacy and performance.
+
+
+════════════════════════════════════════════════════════════════════════
+  SUMMARY
+════════════════════════════════════════════════════════════════════════
+  Domain                               Grade  Findings  Critical    High
+  ─────────────────────────────────── ──────  ────────  ────────  ──────
+  bip.nz                              [33m     C[0m         4         0       2
+  colorcote.co.nz                     [93m     B[0m         2         0       0
+
+  Reports saved:
+    → ssl_report.json
+    → ssl_report.csv
+
